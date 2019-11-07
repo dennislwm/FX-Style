@@ -8,43 +8,19 @@
 //--- The base class CStyleAbtest
 class CStyleAbtest
 {
-private:
-   int   nextBarTime;
-
 public:
 //--- available globally
 //--- constructor
   CStyleAbtest(void){return;}
   virtual void Init(int p, string s){return;}
+  virtual void DeInit(void){return;}
+  virtual void IndicatorValues(void){return;}
 
 //--- virtual means override possible
-  
-//--- values
-   bool isNewBar()
-   {
-      if ( nextBarTime == Time[0] )
-         return(false);
-      else
-         nextBarTime = Time[0];
-      return(true);
-   }
-
-  string strPrintInt(string key, int val)
-  {
-    return( StringConcatenate(nl,key,"=",val) );
-  }
-  string strPrintDbl(string key, double val, int dgt=5)
-  {
-    return( StringConcatenate(nl,key,"=",NormalizeDouble(val,dgt)) );
-  }
-  string strPrintTme(string key, datetime val)
-  {
-    return( StringConcatenate(nl,key,"=",TimeToString(val)) );
-  }
-  string strPrintStr(string key, string val)
-  {
-    return( StringConcatenate(nl,key,"=",val) );
-  }
+  string strPrintInt(string key, int val){return( StringConcatenate(nl,key,"=",val) );}
+  string strPrintDbl(string key, double val, int dgt=5){return( StringConcatenate(nl,key,"=",NormalizeDouble(val,dgt)) );}
+  string strPrintTme(string key, datetime val){return( StringConcatenate(nl,key,"=",TimeToString(val)) );}
+  string strPrintStr(string key, string val){return( StringConcatenate(nl,key,"=",val) );}
   string strPrintBln(string key, bool val)
   {
     string valType;
