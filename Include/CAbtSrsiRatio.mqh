@@ -46,6 +46,8 @@ public:
       ArrayFree(bufFastMa);
       ArrayFree(bufSlowMa);
       ArrayFree(bufClose);
+      delete &IndicatorRatio;
+      delete &IndicatorCrossover;
    }
 
    void IndicatorValues(void) override

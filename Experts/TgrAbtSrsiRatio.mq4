@@ -1,6 +1,6 @@
 #property copyright "Copyright 2019, Dennis Lee"
 #property link      "https://github.com/dennislwm/FX-Style"
-#property version   "1.000"
+#property version   "1.100"
 #property strict
 
 //---- Assert Basic externs
@@ -74,7 +74,7 @@ input    string  TgrToken;
 //|-----------------------------------------------------------------------------------------|
 //---- Assert indicator name and version
 string   IndName="TgrAbtSrsiRatio";
-string   IndVer="1.000";
+string   IndVer="1.100";
 //---- Assert variables for TGR
 CBotStyleAlpha bot;
 CAbtSrsiRatio  *abtestD1[21];
@@ -123,8 +123,9 @@ void OnDeinit(const int reason)
 //--- destroy timer
    EventKillTimer();
 
-   for(int i=0; i<ArraySize(abtestD1); i++){abtestD1[i].DeInit();}
-   for(int i=0; i<ArraySize(abtestH4); i++){abtestH4[i].DeInit();}
+   for(int i=0; i<ArraySize(abtestD1); i++){abtestD1[i].DeInit(); delete abtestD1[i];}
+   for(int i=0; i<ArraySize(abtestH4); i++){abtestH4[i].DeInit(); delete abtestH4[i];}
+   delete &bot;
   
    BigDeInit();
 }
