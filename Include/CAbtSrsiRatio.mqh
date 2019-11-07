@@ -4,44 +4,81 @@
 
 #include <CStyleAbtest.mqh>
 #include <CIndCumulantRatio.mqh>
-
+#include <CIndMaCrossover.mqh>
 
 class CAbtSrsiRatio: public CStyleAbtest
 {
+protected:
+//---- Assert inputs for CumulantRatio
+   int inpCrPeriod;
+   int inpCrAlpha;
+   int inpRatioIndex;
+//---- Assert inputs for AdaptiveEMA
+   int inpMaType, inpMaFastPeriod, inpMaSlowPeriod, inpMaF, inpMaS;
+   int inpMaBufferIndex;
+//---- Assert buffers
+   double bufRatio[];
+   double bufFastMa[],bufSlowMa[],bufClose[];
 public:
-//---- Assert inputs for indicators
-   int CrPeriod;
-   int CrAlpha;
-   int CrBufferIndex;
-
-   CIndCumulantRatio CrIndicator;
+   CIndCumulantRatio IndicatorRatio;
+   CIndMaCrossover IndicatorCrossover;
 
 //---- Constructor
    CAbtSrsiRatio(void):CStyleAbtest(){return;}
    void Init(int p, string s) override
    {
-      CrPeriod=      7;
-      CrAlpha=       100;
-      CrBufferIndex= 0;
-      CrIndicator.Init(p,s);
+      inpCrPeriod=   7;
+      inpCrAlpha=    100;
+      inpRatioIndex= 0;
+      IndicatorRatio.Init(p,s);
+
+      inpMaType=        3;
+      inpMaFastPeriod=  10;
+      inpMaSlowPeriod=  50;
+      inpMaF=           10;
+      inpMaS=           50;
+      inpMaBufferIndex= 0;
+      IndicatorCrossover.Init(p,s);
+   }
+   void DeInit(void) override
+   {
+      ArrayFree(bufRatio);
+      ArrayFree(bufFastMa);
+      ArrayFree(bufSlowMa);
+      ArrayFree(bufClose);
    }
 
-   void ReadIndicatorValues(int bar=60)
+   void IndicatorValues(void) override
    {
-   //--- Declare buffers
-      double CrBuffer[];
-
-   //--- Resize buffers
-      ArrayResize(CrBuffer,bar);
-
-   //--- Fill buffers
-      for(int i=0; i<bar; i++)
+   //--- Declare, resize, fill and read buffers
+   //--- CIndCumulantRatio
+      if( IndicatorRatio.isNewBar() )
       {
-         CrBuffer[i]=iCustom(CrIndicator.symbol,CrIndicator.period,"CumulantRatio",CrPeriod,CrAlpha,CrBufferIndex,i);
+        ArrayResize(bufRatio,IndicatorRatio.intSizeRatio());
+        for(int i=0; i<IndicatorRatio.intSizeRatio(); i++)
+        {
+          bufRatio[i]=      iCustom( IndicatorRatio.strSymbol(),IndicatorRatio.intPeriod(),"CumulantRatio",inpCrPeriod,inpCrAlpha,inpRatioIndex,i );
+        }
+        IndicatorRatio.blnIndicatorValues(bufRatio);
       }
-
-   //--- Read indicator values
-      CrIndicator.blnReadIndicatorValues(CrBuffer);
+      
+   //--- CIndMaCrossover
+      if( IndicatorCrossover.isNewBar() )
+      {
+        ArrayResize(bufFastMa,IndicatorCrossover.intSizeMa());
+        ArrayResize(bufSlowMa,IndicatorCrossover.intSizeMa());
+        ArrayResize(bufClose,IndicatorCrossover.intSizePrice());
+        for(int i=0; i<IndicatorCrossover.intSizeMa(); i++)
+        {
+          bufFastMa[i]=  iCustom( IndicatorCrossover.strSymbol(),IndicatorCrossover.intPeriod(),"AdaptiveEMA","","",inpMaType,inpMaFastPeriod,inpMaF,inpMaS,inpMaBufferIndex,i );
+          bufSlowMa[i]=  iCustom( IndicatorCrossover.strSymbol(),IndicatorCrossover.intPeriod(),"AdaptiveEMA","","",inpMaType,inpMaSlowPeriod,inpMaF,inpMaS,inpMaBufferIndex,i );
+        }
+        for(int i=0; i<IndicatorCrossover.intSizePrice(); i++) 
+        {
+          bufClose[i]=   iClose( IndicatorCrossover.strSymbol(),IndicatorCrossover.intPeriod(),i );
+        }
+        IndicatorCrossover.blnIndicatorValues(bufFastMa,bufSlowMa,bufClose);
+      }
    }   
 };
 
