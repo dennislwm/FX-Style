@@ -1,13 +1,11 @@
 #property copyright "Copyright 2019, Dennis Lee"
 #property link      "https://github.com/dennislwm/FX-Style"
-#property version   "000.900"
+#property version   "1.000"
 #property strict
 
 //---- Assert Basic externs
 #include <Telegram.mqh>
 #include <CAbtSrsiRatio.mqh>
-
-#define  NL "\n"
 
 //|-----------------------------------------------------------------------------------------|
 //|                             C L A S S    C C U S T O M B O T                            |
@@ -17,7 +15,7 @@ class CBotStyleAlpha: public CCustomBot
 public:
    void ProcessMessages(void)
    {
-      string msg=NL;
+      string msg=nl;
       
       for( int i=0; i<m_chats.Total(); i++ ) {
          CCustomChat *chat=m_chats.GetNodeAtIndex(i);
@@ -27,14 +25,31 @@ public:
             
             string text=chat.m_new_one.message_text;
 
-            if( text=="/cr" ) {
-               msg = StringConcatenate( msg,abtest.CrIndicator.strGetRatioLevel(),NL );
-               msg = StringConcatenate( msg,abtest.CrIndicator.strGetAgeBar(),NL );
+            if( text=="/srsid1" ) {
+               for(int a=0; a<ArraySize(abtestD1); a++) 
+               {
+                  if( abtestD1[a].IndicatorCrossover.eZonePrice() >= ZONE_PRICE_BETWEEN )
+                  {
+                     msg = StringConcatenate( msg, abtestD1[a].IndicatorCrossover.strPrintTelegram() );
+                     msg = StringConcatenate( msg, abtestD1[a].IndicatorRatio.strPrintTelegram() );
+                  }
+               }
             }
-            
+            if( text=="/srsih4" ) {
+               for(int a=0; a<ArraySize(abtestH4); a++) 
+               {
+                  if( abtestH4[a].IndicatorCrossover.eZonePrice() >= ZONE_PRICE_BETWEEN )
+                  {
+                     msg = StringConcatenate( msg, abtestH4[a].IndicatorCrossover.strPrintTelegram() );
+                     msg = StringConcatenate( msg, abtestH4[a].IndicatorRatio.strPrintTelegram() );
+                  }
+               }
+            }
+           
             if( text=="/help" || text=="/start" ) {
-               msg = StringConcatenate(msg,"My commands list:",NL);
-               msg = StringConcatenate(msg,"/cr-return cumulant ratio",NL);
+               msg = StringConcatenate(msg,"My commands list:",nl);
+               msg = StringConcatenate(msg,"/srsid1-return D1 srsi ratio",nl);
+               msg = StringConcatenate(msg,"/srsih4-return H4 srsi ratio",nl);
                msg = StringConcatenate(msg,"/help-get help");
             }
             
@@ -51,28 +66,21 @@ input   string s1="-->TGR Settings<--";
 extern   string s1_1="Token - Telegram API Token";
 input    string  TgrToken;
 #include <PlusInit.mqh>
-//---- Assert PlusTurtle
-#include <PlusTurtle.mqh>
 //---- Assert PlusBig
 #include <PlusBig.mqh>
-extern string IndD1="===Debug Properties===";
-extern bool   IndViewDebugNotify         = false;
-extern int    IndViewDebug               = 0;
-extern int    IndViewDebugNoStack        = 100;
-extern int    IndViewDebugNoStackEnd     = 10;
-int IndDebugCrit=0;
-int IndDebugCore=1;
-int IndDebugFine=2;
+
 //|-----------------------------------------------------------------------------------------|
 //|                           I N T E R N A L   V A R I A B L E S                           |
 //|-----------------------------------------------------------------------------------------|
 //---- Assert indicator name and version
 string   IndName="TgrAbtSrsiRatio";
-string   IndVer="0.9.0";
+string   IndVer="1.000";
 //---- Assert variables for TGR
 CBotStyleAlpha bot;
-CAbtSrsiRatio  abtest;
-int      intResult;
+CAbtSrsiRatio  *abtestD1[21];
+CAbtSrsiRatio  *abtestH4[21];
+const string   strSymbol[21] = {"EURGBP","EURAUD","EURNZD","EURUSD","EURCAD","EURJPY","GBPAUD","GBPNZD","GBPUSD","GBPCAD","GBPJPY","AUDNZD","AUDUSD","AUDCAD","AUDJPY","NZDUSD","NZDCAD","NZDJPY","USDCAD","USDJPY","CADJPY"};
+      int      intResult;
 
 //|-----------------------------------------------------------------------------------------|
 //|                             I N I T I A L I Z A T I O N                                 |
@@ -80,13 +88,24 @@ int      intResult;
 int OnInit()
 {
    InitInit();
-   TurtleInit();
    BigInit();
    
    bot.Token(TgrToken);
    intResult=bot.GetMe();
-   
-   abtest.Init(Period(), Symbol());
+
+   for(int i=0; i<ArraySize(abtestD1); i++) 
+   {
+      CAbtSrsiRatio *abtest = new CAbtSrsiRatio();
+      abtest.Init(PERIOD_D1, strSymbol[i]);
+      abtestD1[i] = abtest;
+   }
+
+   for(int i=0; i<ArraySize(abtestH4); i++) 
+   {
+      CAbtSrsiRatio *abtest = new CAbtSrsiRatio();
+      abtest.Init(PERIOD_H4, strSymbol[i]);
+      abtestH4[i] = abtest;
+   }
   
 //--- create timer
    EventSetTimer(10);
@@ -94,17 +113,6 @@ int OnInit()
    
 //---
    return(INIT_SUCCEEDED);
-}
-int SymbolTfConst2Val(string sym, int tf)
-{
-   int MNSymbol,MNSymbolCalc;
-   for(int a=0;a<6;a++)//turn the Symbol() into an ASCII string and add each character into MNSymbol
-   {
-      MNSymbolCalc=StringGetChar(sym, a);
-      MNSymbolCalc=((MNSymbolCalc-64)*(MathPow(10,(a))));//subtract 64 b/c ASCII characters start at 65, multiply result by the a-th power for neatness (unnecessary though)
-      MNSymbol = MNSymbol+MNSymbolCalc;
-   }
-   return( MNSymbol+tf );
 }
 
 //|-----------------------------------------------------------------------------------------|
@@ -114,7 +122,10 @@ void OnDeinit(const int reason)
 {
 //--- destroy timer
    EventKillTimer();
-   
+
+   for(int i=0; i<ArraySize(abtestD1); i++){abtestD1[i].DeInit();}
+   for(int i=0; i<ArraySize(abtestH4); i++){abtestH4[i].DeInit();}
+  
    BigDeInit();
 }
 //|-----------------------------------------------------------------------------------------|
@@ -131,51 +142,12 @@ void OnTimer()
       BigComment( "Bot name: "+bot.Name() );
    
    bot.GetUpdates();
-   
-   abtest.ReadIndicatorValues();
+
+//--- Read indicator values
+   for(int i=0; i<ArraySize(abtestD1); i++){abtestD1[i].IndicatorValues();}
+   for(int i=0; i<ArraySize(abtestH4); i++){abtestH4[i].IndicatorValues();}
    
    bot.ProcessMessages();
-}
-//|-----------------------------------------------------------------------------------------|
-//|                           I N T E R N A L   F U N C T I O N S                           |
-//|-----------------------------------------------------------------------------------------|
-void IndDebugPrint(int dbg, string fn, string msg)
-{
-   static int noStackCount;
-   if(IndViewDebug>=dbg)
-   {
-      if(dbg>=IndDebugFine && IndViewDebugNoStack>0)
-      {
-         if( MathMod(noStackCount,IndViewDebugNoStack) <= IndViewDebugNoStackEnd )
-            Print(IndViewDebug,"-",noStackCount,":",fn,"(): ",msg);
-            
-         noStackCount ++;
-      }
-      else
-      {
-         if(IndViewDebugNotify) SendNotification( IndViewDebug + ":" + fn + "(): " + msg );
-         Print(IndViewDebug,":",fn,"(): ",msg);
-      }
-   }
-}
-string IndDebugInt(string key, int val)
-{
-   return( StringConcatenate(";",key,"=",val) );
-}
-string IndDebugDbl(string key, double val, int dgt=5)
-{
-   return( StringConcatenate(";",key,"=",NormalizeDouble(val,dgt)) );
-}
-string IndDebugStr(string key, string val)
-{
-   return( StringConcatenate(";",key,"=\"",val,"\"") );
-}
-string IndDebugBln(string key, bool val)
-{
-   string valType;
-   if( val )   valType="true";
-   else        valType="false";
-   return( StringConcatenate(";",key,"=",valType) );
 }
 //|-----------------------------------------------------------------------------------------|
 //|                            E N D   O F   I N D I C A T O R                              |
