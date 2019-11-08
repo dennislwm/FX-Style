@@ -14,10 +14,9 @@ protected:
   ENUM_ZONE_PRICE   zone;
   int               size_ma;
   int               size_price;
-  string            ind_name;
 public:
 //--- available globally
-  CIndMaCrossover(void):CStyleBuffer(){age=AGE_BAR_NA; cross=CROSSOVER_NA; zone=ZONE_PRICE_NA; size_ma=100; size_price=1; ind_name="MaCrossover";}
+  CIndMaCrossover(void):CStyleBuffer(){age=AGE_BAR_NA; cross=CROSSOVER_NA; zone=ZONE_PRICE_NA; size_ma=100; size_price=1; name="MaCrossover";}
 
   bool blnIndicatorValues (double& b1[], double& b2[], double& b3[])
   {
@@ -79,48 +78,4 @@ public:
   ENUM_ZONE_PRICE    eZonePrice(void){return zone;}
   int    intSizeMa(void){return size_ma;}
   int    intSizePrice(void){return size_price;}
-  string strName(void){return ind_name;}
-  string strAgeBar(void)
-  {
-    ENUM_AGE_BAR a = age;
-    if (a == AGE_BAR_BORN)     return("== Bar[1]");
-    if (a == AGE_BAR_BABY)     return("<= Bar[2]");
-    if (a == AGE_BAR_INFANT)   return("<= Bar[3]");
-    if (a == AGE_BAR_TODDLER)  return("<= Bar[5]");
-    if (a == AGE_BAR_CHILD)    return("<= Bar[8]");
-    if (a == AGE_BAR_TEENAGER) return("<= Bar[13]");
-    if (a == AGE_BAR_ADULT)    return("<= Bar[21]");
-    if (a == AGE_BAR_PARENT)   return("<= Bar[34]");
-    if (a == AGE_BAR_GRAND)    return("<= Bar[55]");
-    if (a == AGE_BAR_GREAT)    return("> Bar[55]");
-  //--- Got this far, so return NA
-     return(na);
-  }
-  string strCrossover(void)
-  {
-    ENUM_CROSSOVER c = cross;
-    if (c == CROSSOVER_ABOVE)  return("FastMa is bullish");
-    if (c == CROSSOVER_UNDER)  return("FastMa is bearish");
-  //--- Got this far, so return NA
-     return(na);
-  }
-  string strZonePrice(void)
-  {
-    ENUM_ZONE_PRICE z = zone;
-    if (z == ZONE_PRICE_MOMENTUM)  return("Price has momentum");
-    if (z == ZONE_PRICE_BETWEEN)  return("Price between both MAs");
-    if (z == ZONE_PRICE_RETREAT)  return("Price has retreated");
-  //--- Got this far, so return NA
-    return(na);
-  }
-  string strPrintTelegram(void)
-  {
-    string msg=nl;
-    msg = StringConcatenate(msg, symbol , " ", strPeriod());
-    msg = StringConcatenate(msg, nl, ">", ind_name, "<");
-    msg = StringConcatenate(msg, strPrintStr( "MC Age",strAgeBar() ));
-    msg = StringConcatenate(msg, strPrintStr( "MC Crossover",strCrossover() ));
-    msg = StringConcatenate(msg, strPrintStr( "MC Zone",strZonePrice() ));
-    return( msg );    
-  }
 };

@@ -15,6 +15,7 @@ protected:
 //--- available through methods
   int     period;
   string  symbol;
+  string  name;
 //--- values
   string strPrintInt(string key, int val){return( StringConcatenate(nl,key,"=",val) );}
   string strPrintDbl(string key, double val, int dgt=5){return( StringConcatenate(nl,key,"=",NormalizeDouble(val,dgt)) );}
@@ -32,10 +33,12 @@ public:
 
   CStyleBuffer(void){period=0;symbol=NULL;}
   void Init(int p, string s){period=p;symbol=s;}
+  void Name(string n){name=n;}
 
 //--- virtual means override possible
   virtual bool blnIndicatorValues (double& b[]) {return false;} 
   virtual bool blnIndicatorValues (double& b1[], double& b2[]) {return false;} 
+  virtual bool blnIndicatorValues (double& b1[], double& b2[], double p) {return false;} 
   virtual bool blnIndicatorValues (double& b1[], double& b2[], double& b3[]) {return false;} 
   virtual string strPrintTelegram(void){
     string msg=nl;
@@ -54,6 +57,7 @@ public:
     return(true);
   }
   int     intPeriod(void){return period;}
+  string  strName(void){return name;}
   string  strPeriod(void)
   {
     int p = period;
@@ -87,11 +91,11 @@ enum ENUM_AGE_BAR
   AGE_BAR_GRAND,     // <= Bar[55]
   AGE_BAR_GREAT      // > Bar[55]
 };
-enum ENUM_RATIO_LEVEL
+enum ENUM_HISTOGRAM_LEVEL
 {
-  RATIO_LEVEL_NA,          // NA
-  RATIO_LEVEL_ABOVE,       // Above or equal 0.00
-  RATIO_LEVEL_UNDER        // Below 0.00
+  HISTOGRAM_LEVEL_NA,          // NA
+  HISTOGRAM_LEVEL_ABOVE,       // Above or equal 0.00
+  HISTOGRAM_LEVEL_UNDER        // Below 0.00
 };
 enum ENUM_CROSSOVER
 {
@@ -105,4 +109,18 @@ enum ENUM_ZONE_PRICE
   ZONE_PRICE_MOMENTUM,
   ZONE_PRICE_BETWEEN,
   ZONE_PRICE_RETREAT
+};
+enum ENUM_ZONE_LINE
+{
+  ZONE_LINE_NA,                 // Not available
+  ZONE_LINE_POSITIVE_MOMENTUM,  // Line is green and above +NeutralLevel
+  ZONE_LINE_POSITIVE_RETREAT,   // Line is green and below +NeutralLevel
+  ZONE_LINE_NEGATIVE_MOMENTUM,  // Line is red and below -NeutralLevel
+  ZONE_LINE_NEGATIVE_RETREAT    // Line is red and above -NeutralLevel
+};
+enum ENUM_SLOPE_LINE
+{
+  SLOPE_LINE_NA,    // Not available
+  SLOPE_LINE_UP,    // Line is sloping upwards
+  SLOPE_LINE_DOWN   // Line is sloping downwards
 };
