@@ -1,6 +1,6 @@
 #property copyright "Copyright 2019, Dennis Lee"
 #property link      "https://github.com/dennislwm/FX-Style"
-#property version   "1.100"
+#property version   "1.200"
 #property strict
 
 //---- Assert Basic externs
@@ -30,8 +30,14 @@ public:
                {
                   if( abtestD1[a].IndicatorCrossover.eZonePrice() >= ZONE_PRICE_BETWEEN )
                   {
-                     msg = StringConcatenate( msg, abtestD1[a].IndicatorCrossover.strPrintTelegram() );
-                     msg = StringConcatenate( msg, abtestD1[a].IndicatorRatio.strPrintTelegram() );
+                     if(( abtestD1[a].IndicatorSrsi.eZoneLine()<=ZONE_LINE_POSITIVE_RETREAT && abtestD1[a].IndicatorCrossover.eCrossover()==CROSSOVER_ABOVE && abtestD1[a].IndicatorRatio.eHistogramLevel()==HISTOGRAM_LEVEL_ABOVE )
+                     || ( abtestD1[a].IndicatorSrsi.eZoneLine()>=ZONE_LINE_NEGATIVE_MOMENTUM && abtestD1[a].IndicatorCrossover.eCrossover()==CROSSOVER_UNDER && abtestD1[a].IndicatorRatio.eHistogramLevel()==HISTOGRAM_LEVEL_UNDER ))
+                     {
+                        msg = StringConcatenate( msg, nl, strSymbol[a], " D1" );
+                        msg = StringConcatenate( msg, abtestD1[a].IndicatorSrsi.strPrintTelegram() );
+                        msg = StringConcatenate( msg, abtestD1[a].IndicatorCrossover.strPrintTelegram() );
+                        msg = StringConcatenate( msg, abtestD1[a].IndicatorRatio.strPrintTelegram() );
+                     }
                   }
                }
             }
@@ -40,8 +46,14 @@ public:
                {
                   if( abtestH4[a].IndicatorCrossover.eZonePrice() >= ZONE_PRICE_BETWEEN )
                   {
-                     msg = StringConcatenate( msg, abtestH4[a].IndicatorCrossover.strPrintTelegram() );
-                     msg = StringConcatenate( msg, abtestH4[a].IndicatorRatio.strPrintTelegram() );
+                     if(( abtestH4[a].IndicatorSrsi.eZoneLine()<=ZONE_LINE_POSITIVE_RETREAT && abtestH4[a].IndicatorCrossover.eCrossover()==CROSSOVER_ABOVE && abtestH4[a].IndicatorRatio.eHistogramLevel()==HISTOGRAM_LEVEL_ABOVE )
+                     || ( abtestH4[a].IndicatorSrsi.eZoneLine()>=ZONE_LINE_NEGATIVE_MOMENTUM && abtestH4[a].IndicatorCrossover.eCrossover()==CROSSOVER_UNDER && abtestH4[a].IndicatorRatio.eHistogramLevel()==HISTOGRAM_LEVEL_UNDER ))
+                     {                  
+                        msg = StringConcatenate( msg, nl, strSymbol[a], " H4");
+                        msg = StringConcatenate( msg, abtestH4[a].IndicatorSrsi.strPrintTelegram() );
+                        msg = StringConcatenate( msg, abtestH4[a].IndicatorCrossover.strPrintTelegram() );
+                        msg = StringConcatenate( msg, abtestH4[a].IndicatorRatio.strPrintTelegram() );
+                     }
                   }
                }
             }
@@ -52,7 +64,7 @@ public:
                msg = StringConcatenate(msg,"/srsih4-return H4 srsi ratio",nl);
                msg = StringConcatenate(msg,"/help-get help");
             }
-            
+            if( msg==nl ) msg=StringConcatenate(msg,"no match");
             SendMessage( chat.m_id, msg );
          }
       }
@@ -74,12 +86,14 @@ input    string  TgrToken;
 //|-----------------------------------------------------------------------------------------|
 //---- Assert indicator name and version
 string   IndName="TgrAbtSrsiRatio";
-string   IndVer="1.100";
+string   IndVer="1.200";
 //---- Assert variables for TGR
 CBotStyleAlpha bot;
 CAbtSrsiRatio  *abtestD1[21];
 CAbtSrsiRatio  *abtestH4[21];
 const string   strSymbol[21] = {"EURGBP","EURAUD","EURNZD","EURUSD","EURCAD","EURJPY","GBPAUD","GBPNZD","GBPUSD","GBPCAD","GBPJPY","AUDNZD","AUDUSD","AUDCAD","AUDJPY","NZDUSD","NZDCAD","NZDJPY","USDCAD","USDJPY","CADJPY"};
+      int      intSrsiD1[21] = {      34,      55,      55,      55,      48,      55,      55,      37,      35,      55,      55,      55,      55,      34,      55,      55,      55,      55,      55,      55,      55};
+      int      intSrsiH4[21] = {      21,      55,      55,      20,      55,      55,      29,      55,      55,      55,      55,      55,      55,      44,      55,      55,      55,      55,      65,      55,      55};
       int      intResult;
 
 //|-----------------------------------------------------------------------------------------|
@@ -96,7 +110,8 @@ int OnInit()
    for(int i=0; i<ArraySize(abtestD1); i++) 
    {
       CAbtSrsiRatio *abtest = new CAbtSrsiRatio();
-      abtest.Init(PERIOD_D1, strSymbol[i]);
+      abtest.Init( PERIOD_D1, strSymbol[i] );
+      abtest.LookBackBar( intSrsiD1[i] );
       abtestD1[i] = abtest;
    }
 
@@ -104,6 +119,7 @@ int OnInit()
    {
       CAbtSrsiRatio *abtest = new CAbtSrsiRatio();
       abtest.Init(PERIOD_H4, strSymbol[i]);
+      abtest.LookBackBar( intSrsiH4[i] );
       abtestH4[i] = abtest;
    }
   
